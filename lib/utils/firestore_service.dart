@@ -24,13 +24,13 @@ class FirestoreService {
     await _db.collection('goals').add(goal.toMap());
   }
 
-  // ========== Operaciones con Tareas (Tasks) ==========
   Future<List<TaskModel>> getTasks(String goalId) async {
     final snapshot = await _db.collection('daily_tasks')
         .where('goalId', isEqualTo: goalId)
         .get();
+
     return snapshot.docs
-        .map((doc) => TaskModel.fromMap(doc.data(), doc.id))
+        .map((doc) => TaskModel.fromMap({...doc.data(), 'id': doc.id})) // Combina datos + ID
         .toList();
   }
 

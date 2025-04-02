@@ -71,5 +71,12 @@ class AppTextStyles {
     color: AppColors.primarypurple,
   );
 
+  static const headlineMedium = TextStyle(
+  fontSize: 23.0,
+  fontWeight: FontWeight.w600, // Semi-bold
+  color: AppColors.textPrimary,
+  letterSpacing: 0.15,
+  );
+
 
 }

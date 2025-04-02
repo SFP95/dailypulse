@@ -1,3 +1,4 @@
+import 'package:dailypulse/screens/calendar_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -40,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Página 1: Resumen de Metas
           _buildGoalsSummary(),
+          CalendarScreen(),
           // Página 2: Tareas Pendientes
           _buildTasksList(),
           // Página 3: Perfil
@@ -59,6 +61,10 @@ class _HomeScreenState extends State<HomeScreen> {
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.assessment),
+            label: 'Resumen',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
             label: 'Resumen',
           ),
           BottomNavigationBarItem(

@@ -191,6 +191,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
           createdAt: DateTime.now(),
           userId: '',
           dueTime: TimeOfDay.now(),
+          dueDate: DateTime.now(),
         );
 
         await _firestore.addTask(newTask);
