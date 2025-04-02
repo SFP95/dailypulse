@@ -11,7 +11,8 @@ class AppColors {
 
   // Secundarios
   static const success = Color(0xFF6BCB94);  // Verde
-  static const warning = Color(0xFFEA846C);  // Naranja
+  static const warning = Color(0xFFFC6F6F);  // Naranja
+  static const naranja = Color(0xFFEACC81);  // medium
   static const disabled = Color(0xC8B0AEAE);
 
   // Neutrales

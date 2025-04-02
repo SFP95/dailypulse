@@ -168,15 +168,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
         },
         calendarStyle: CalendarStyle(
           selectedDecoration: BoxDecoration(
-            color: AppColors.textSecondary,
+            color: AppColors.primaryblue,
             shape: BoxShape.circle,
           ),
           todayDecoration: BoxDecoration(
-            color: AppColors.textSecondary.withOpacity(0.3),
+            color: AppColors.textPrimary.withOpacity(0.3),
             shape: BoxShape.circle,
           ),
           markerDecoration: BoxDecoration(
-            color: AppColors.textSecondary,
+            color: AppColors.textPrimary,
             shape: BoxShape.circle,
           ),
           markersAlignment: Alignment.bottomRight,
@@ -198,7 +198,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     '${events.length}',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 10,
+                      fontSize: 15,
                     ),
                   ),
                 ),
@@ -362,15 +362,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Color _getTaskColor(TaskModel task) {
-    if (task.isCompleted) return Colors.grey[200]!;
+    if (task.isCompleted) return AppColors.primaryblue!;
 
     switch (task.priority) {
       case Priority.high:
-        return Colors.red[50]!;
+        return AppColors.warning!;
       case Priority.medium:
-        return Colors.orange[50]!;
+        return AppColors.naranja!;
       case Priority.low:
-        return Colors.green[50]!;
+        return AppColors.success!;
       default:
         return Theme.of(context).cardTheme.color!;
     }
