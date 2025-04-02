@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "381053516514",
+    "project_id": "dailypulse-f7220",
+    "storage_bucket": "dailypulse-f7220.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381053516514:android:4e532e38cb7e4b6bdffcbb",
+        "android_client_info": {
+          "package_name": "com.example.dailypulse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQVQf4-VLwn7t_WPy-rKDN0SZny7Q5ijI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

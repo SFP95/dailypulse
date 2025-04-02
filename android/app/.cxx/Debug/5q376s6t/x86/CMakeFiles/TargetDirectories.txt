@@ -1,0 +1,2 @@
+C:/Users/Sonyn/AndroidStudioProjects/dailypulse/android/app/.cxx/Debug/5q376s6t/x86/CMakeFiles/edit_cache.dir
+C:/Users/Sonyn/AndroidStudioProjects/dailypulse/android/app/.cxx/Debug/5q376s6t/x86/CMakeFiles/rebuild_cache.dir
