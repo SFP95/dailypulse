@@ -1,4 +1,5 @@
 import 'package:dailypulse/screens/calendar_screens.dart';
+import 'package:dailypulse/screens/profile_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -48,10 +49,10 @@ class _HomeScreenState extends State<HomeScreen> {
             setState(() => _selectedIndex = index);
           },
           children: [
-            _buildGoalsSummary(),
-            CalendarScreen(),
-            _buildTasksList(),
-            _buildProfileSection(),
+            _buildGoalsSummary(),   //clase goals -- pendiente
+            CalendarScreen(),       //clase calendar
+            _buildTasksList(),      //clase tasks -- pendiente
+            ProfileScreen(),        //clase profile
           ],
         ),
       ),
@@ -100,13 +101,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      /*floatingActionButton: FloatingActionButton(
         onPressed: _showAddGoalDialog,
         child: Icon(Icons.add, color: Colors.white,),
         backgroundColor: AppColors.primaryPurple,
         elevation: 4,
         shape: CircleBorder(),
-      ),
+      ),*/
     );
   }
 
@@ -286,65 +287,6 @@ class _HomeScreenState extends State<HomeScreen> {
         // Mantén tu implementación actual de tasks
         return Center(child: Text('Lista de tareas pendientes', style: AppTextStyles.bodyLarge));
       },
-    );
-  }
-
-  Widget _buildProfileSection() {
-    final user = FirebaseAuth.instance.currentUser;
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.primaryLila,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                )
-              ],
-            ),
-            child: Icon(Icons.person, size: 60, color: Colors.white),
-          ),
-          SizedBox(height: 24),
-          Text(
-            'Bienvenido',
-            style: AppTextStyles.headlineSmall.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            (user?.displayName ?? '').isNotEmpty
-                ? '${user!.displayName![0].toUpperCase()}${user.displayName!.substring(1).toLowerCase()}'
-                : '',
-            style: AppTextStyles.bodyMedium.copyWith(
-              fontSize: 20,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: _signOut,
-            icon: Icon(Icons.logout, size: 20, color: AppColors.primaryLila,),
-            label: Text('Cerrar sesión',style: TextStyle(color: AppColors.primaryLila,),),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryPurple,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
