@@ -71,8 +71,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Calendario', style: AppTextStyles.headlineMedium.copyWith(color: AppColors.textPrimary)),
-        backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
         actions: [

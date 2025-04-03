@@ -27,13 +27,24 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.primaryPurple,
-        title: Text('DailyPulse', style: AppTextStyles.headlineLarge.copyWith(color: Colors.white)),
-        actions: [
+        shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+        bottom: Radius.circular(30), // Ajusta el radio aquí
+          ),
+        ),
+        title: Container(
+          alignment: Alignment.center,
+          child: Text('Daily Pulse',
+              style: AppTextStyles.headlineLarge.copyWith(
+                  color: AppColors.accentPink,
+              )),
+        ),
+        /*actions: [
           IconButton(
             icon: Icon(Icons.logout, color: Colors.white),
             onPressed: _signOut,
           ),
-        ],
+        ],*/
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -63,7 +74,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          borderRadius: BorderRadius.vertical(
+              top: Radius.circular(30)),
           child: BottomNavigationBar(
             backgroundColor: Colors.white,
             selectedItemColor: AppColors.primaryPurple,
