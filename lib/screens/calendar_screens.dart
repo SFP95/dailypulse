@@ -69,15 +69,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(Icons.today,
                 color: AppColors.primaryPurple,
-                size: 33,),
+                size: 30,),
             onPressed: () => setState(() {
               _focusedDay = DateTime.now();
               _selectedDay = DateTime.now();
@@ -95,16 +96,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
             children: [
               // Selector de vista
               Padding(
-                padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                padding: EdgeInsets.fromLTRB(0, 15, 0, 0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppColors.primaryPurple.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.primaryPurple.withOpacity(0.8),
-                        blurRadius: 9,
-                        spreadRadius: 1,
+                        blurRadius: 15,
+                        spreadRadius: 0,
                       ),
                     ],
                   ),
@@ -145,7 +146,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
               // Calendario
               _buildCalendar(),
-              SizedBox(height: 16),
+              SizedBox(height: 10),
 
               // Lista de eventos
               Expanded(child: _buildEventList()),
@@ -207,7 +208,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           weekendDecoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.accentPink.withOpacity(0.6),
+            color: AppColors.accentPink.withOpacity(0.7),
           ),
           selectedDecoration: BoxDecoration(
             color: AppColors.primaryPurple,
