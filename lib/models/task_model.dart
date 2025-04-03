@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum Priority {
   low,
@@ -35,22 +36,33 @@ class TaskModel {
 
   factory TaskModel.fromMap(Map<String, dynamic> map) {
     try {
-      final timeParts = (map['dueTime'] as String).split(':');
+      // Manejo mejorado de dueTime
+      final timeStr = map['dueTime']?.toString() ?? '00:00';
+      final timeParts = timeStr.split(':');
+      final hour = int.tryParse(timeParts[0]) ?? 0;
+      final minute = int.tryParse(timeParts.length > 1 ? timeParts[1] : '0') ?? 0;
+
+      // Manejo robusto de dueDate (Timestamp o String)
+      DateTime parseDueDate(dynamic date) {
+        if (date == null) return DateTime.now();
+        if (date is Timestamp) return date.toDate();
+        if (date is String) return DateTime.parse(date);
+        if (date is DateTime) return date;
+        throw FormatException('Formato de fecha no válido');
+      }
+
       return TaskModel(
-        id: map['id'] as String,
-        goalId: map['goalId'] as String,
-        userId: map['userId'] as String,
-        title: map['title'] as String,
+        id: map['id']?.toString() ?? '',
+        goalId: map['goalId']?.toString() ?? '',
+        userId: map['userId']?.toString() ?? '',
+        title: map['title']?.toString() ?? 'Sin título',
         isCompleted: map['isCompleted'] ?? false,
-        dueTime: TimeOfDay(
-          hour: int.parse(timeParts[0]),
-          minute: int.parse(timeParts[1]),
-        ),
-        dueDate: DateTime.parse(map['dueDate'] as String),
+        dueTime: TimeOfDay(hour: hour, minute: minute),
+        dueDate: parseDueDate(map['dueDate']),
         repeatDays: List<String>.from(map['repeatDays'] ?? []),
-        createdAt: DateTime.parse(map['createdAt'] as String),
+        createdAt: parseDueDate(map['createdAt']),
         priority: _parsePriority(map['priority']),
-        description: map['description'] ?? '',
+        description: map['description']?.toString() ?? '',
       );
     } catch (e) {
       throw FormatException('Error parsing TaskModel: $e');
@@ -76,9 +88,9 @@ class TaskModel {
       'title': title,
       'isCompleted': isCompleted,
       'dueTime': '${dueTime.hour.toString().padLeft(2, '0')}:${dueTime.minute.toString().padLeft(2, '0')}',
-      'dueDate': dueDate.toIso8601String(),
+      'dueDate': Timestamp.fromDate(dueDate), // Guardar como Timestamp
       'repeatDays': repeatDays,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': Timestamp.fromDate(createdAt), // Guardar como Timestamp
       'priority': priority.toString().split('.').last,
       'description': description,
     };

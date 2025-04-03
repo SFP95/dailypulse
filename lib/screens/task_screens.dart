@@ -148,6 +148,7 @@ class _TasksScreenState extends State<TasksScreen> {
     TimeOfDay selectedTime = TimeOfDay.now();
     Priority selectedPriority = Priority.medium;
     List<String> repeatDays = [];
+    String goalId = '';
 
     await showDialog(
       context: context,
@@ -256,7 +257,9 @@ class _TasksScreenState extends State<TasksScreen> {
                 child: Text('Cancelar'),
               ),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryPurple),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryPurple,
+                ),
                 onPressed: () async {
                   if (titleController.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -272,13 +275,13 @@ class _TasksScreenState extends State<TasksScreen> {
                     await _firestore.collection('tasks').add({
                       'title': titleController.text.trim(),
                       'description': descController.text.trim(),
-                      'dueDate': selectedDate.toIso8601String(),
+                      'dueDate': DateFormat('yyyy-MM-dd').format(selectedDate),
                       'dueTime': '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
                       'isCompleted': false,
                       'priority': selectedPriority.toString().split('.').last,
                       'repeatDays': repeatDays,
                       'userId': user.uid,
-                      'goalId': '', // Ajusta según tu necesidad
+                      'goalId': goalId, // Asegúrate de tener este valor
                       'createdAt': FieldValue.serverTimestamp(),
                     });
 
