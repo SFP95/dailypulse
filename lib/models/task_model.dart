@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 
 enum Priority {
   low,
@@ -20,8 +19,6 @@ class TaskModel {
   final Priority priority;
   final String description;
 
-  String get descriptionOrEmpty => description ?? '';
-
   TaskModel({
     required this.id,
     required this.goalId,
@@ -33,54 +30,67 @@ class TaskModel {
     this.repeatDays = const [],
     required this.createdAt,
     this.priority = Priority.medium,
-    this.description = '', // Valor por defecto vacío
+    this.description = '',
   });
 
-  // Versión CORRECTA de fromMap (ID dentro del mapa)
   factory TaskModel.fromMap(Map<String, dynamic> map) {
-    final time = map['dueTime'] as String;
-    return TaskModel(
-      id: map['id'] as String, // El ID viene dentro del mapa
-      goalId: map['goalId'] as String,
-      userId: map['userId'] as String,
-      title: map['title'] as String,
-      isCompleted: map['isCompleted'] ?? false,
-      dueTime: TimeOfDay(
-        hour: int.parse(time.split(':')[0]),
-        minute: int.parse(time.split(':')[1]),
-      ),
-      dueDate: DateTime.parse(map['dueDate'] as String),
-      repeatDays: List<String>.from(map['repeatDays'] ?? []),
-      createdAt: DateTime.parse(map['createdAt'] as String),
-      priority: _parsePriority(map['priority']),
-    );
+    try {
+      final timeParts = (map['dueTime'] as String).split(':');
+      return TaskModel(
+        id: map['id'] as String,
+        goalId: map['goalId'] as String,
+        userId: map['userId'] as String,
+        title: map['title'] as String,
+        isCompleted: map['isCompleted'] ?? false,
+        dueTime: TimeOfDay(
+          hour: int.parse(timeParts[0]),
+          minute: int.parse(timeParts[1]),
+        ),
+        dueDate: DateTime.parse(map['dueDate'] as String),
+        repeatDays: List<String>.from(map['repeatDays'] ?? []),
+        createdAt: DateTime.parse(map['createdAt'] as String),
+        priority: _parsePriority(map['priority']),
+        description: map['description'] ?? '',
+      );
+    } catch (e) {
+      throw FormatException('Error parsing TaskModel: $e');
+    }
   }
-
-
 
   static Priority _parsePriority(dynamic priority) {
-  if (priority == null) return Priority.medium;
-  if (priority is String) {
-  return Priority.values.firstWhere(
-  (e) => e.toString().split('.').last == priority.toLowerCase(),
-  orElse: () => Priority.medium,
-  );
-  }
-  return Priority.medium;
+    if (priority == null) return Priority.medium;
+    if (priority is String) {
+      return Priority.values.firstWhere(
+            (e) => e.toString().split('.').last == priority.toLowerCase(),
+        orElse: () => Priority.medium,
+      );
+    }
+    return Priority.medium;
   }
 
   Map<String, dynamic> toMap() {
-  return {
-  'id': id,
-  'goalId': goalId,
-  'userId': userId,
-  'title': title,
-  'isCompleted': isCompleted,
-  'dueTime': '${dueTime.hour}:${dueTime.minute}',
-  'dueDate': dueDate.toIso8601String(),
-  'repeatDays': repeatDays,
-  'createdAt': createdAt.toIso8601String(),
-  'priority': priority.toString().split('.').last,
-  };
+    return {
+      'id': id,
+      'goalId': goalId,
+      'userId': userId,
+      'title': title,
+      'isCompleted': isCompleted,
+      'dueTime': '${dueTime.hour.toString().padLeft(2, '0')}:${dueTime.minute.toString().padLeft(2, '0')}',
+      'dueDate': dueDate.toIso8601String(),
+      'repeatDays': repeatDays,
+      'createdAt': createdAt.toIso8601String(),
+      'priority': priority.toString().split('.').last,
+      'description': description,
+    };
+  }
+
+  DateTime get combinedDueDateTime {
+    return DateTime(
+      dueDate.year,
+      dueDate.month,
+      dueDate.day,
+      dueTime.hour,
+      dueTime.minute,
+    );
   }
 }

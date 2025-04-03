@@ -163,6 +163,7 @@ class GoalsScreen extends StatelessWidget {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: AppColors.accentBlue,
         title: Text('Nueva Meta'),
         content: Column(
           mainAxisSize: MainAxisSize.min,

@@ -18,24 +18,28 @@ class _TasksScreenState extends State<TasksScreen> {
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
+    if (currentUser == null) {
+      return _buildAuthRequiredState();
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Mis Tareas', style: AppTextStyles.headlineMedium),
+        //title: Text('Mis Tareas', style: AppTextStyles.headlineMedium),
         elevation: 0,
         centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore
             .collection('tasks')
-            .where('userId', isEqualTo: currentUser?.uid)
+            .where('userId', isEqualTo: currentUser.uid)
             .where('isCompleted', isEqualTo: false)
-            .orderBy('dueDate') // Corregido el nombre del campo
-            .orderBy(FieldPath.documentId)
+            .orderBy('dueDate')
+            .orderBy('dueTime')
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return _buildErrorState(snapshot.error.toString());
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -43,14 +47,15 @@ class _TasksScreenState extends State<TasksScreen> {
           }
 
           final tasks = snapshot.data!.docs.map((doc) {
-            return TaskModel.fromMap({...doc.data() as Map<String, dynamic>, 'id': doc.id});
+            return TaskModel.fromMap({
+              ...doc.data() as Map<String, dynamic>,
+              'id': doc.id,
+            });
           }).toList();
 
-          if (tasks.isEmpty) {
-            return _buildEmptyState();
-          }
-
-          return ListView.builder(
+          return tasks.isEmpty
+              ? _buildEmptyState()
+              : ListView.builder(
             padding: EdgeInsets.all(16),
             itemCount: tasks.length,
             itemBuilder: (context, index) => _buildTaskItem(tasks[index]),
@@ -62,28 +67,6 @@ class _TasksScreenState extends State<TasksScreen> {
         child: Icon(Icons.add, color: Colors.white),
         backgroundColor: AppColors.primaryPurple,
         shape: CircleBorder(),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.task, size: 60, color: AppColors.textSecondary),
-          SizedBox(height: 20),
-          Text('No tienes tareas pendientes', style: AppTextStyles.bodyLarge),
-          SizedBox(height: 20),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryPurple,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            onPressed: () => _showAddTaskDialog(context),
-            child: Text('Crear primera tarea', style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
   }
@@ -109,14 +92,32 @@ class _TasksScreenState extends State<TasksScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (task.description != null && task.description!.isNotEmpty)
+            if (task.description.isNotEmpty)
               Padding(
                 padding: EdgeInsets.only(top: 4, bottom: 8),
                 child: Text(
-                  task.description!, // Ahora es seguro usar ! porque ya verificamos null
+                  task.description,
                   style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                 ),
               ),
+            Text(
+              'Vence: ${DateFormat('dd/MM/yyyy').format(task.dueDate)} a las ${task.dueTime.format(context)}',
+              style: AppTextStyles.bodySmall,
+            ),
+            if (task.repeatDays.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text(
+                  'Repite: ${task.repeatDays.join(', ')}',
+                  style: AppTextStyles.bodySmall,
+                ),
+              ),
+            Text(
+              'Prioridad: ${task.priority.toString().split('.').last}',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: _getPriorityColor(task.priority),
+              ),
+            ),
           ],
         ),
         trailing: IconButton(
@@ -127,33 +128,26 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return DateFormat('dd/MM/yyyy - HH:mm').format(date);
-  }
-
-  Future<void> _toggleTaskCompletion(TaskModel task) async {
-    try {
-      await _firestore.collection('tasks').doc(task.id).update({
-        'isCompleted': !task.isCompleted,
-      });
-    } catch (e) {
-      print('Error al actualizar tarea: $e');
-    }
-  }
-
-  Future<void> _deleteTask(String taskId) async {
-    try {
-      await _firestore.collection('tasks').doc(taskId).delete();
-    } catch (e) {
-      print('Error al eliminar tarea: $e');
+  Color _getPriorityColor(Priority priority) {
+    switch (priority) {
+      case Priority.high:
+        return Colors.red;
+      case Priority.medium:
+        return Colors.orange;
+      case Priority.low:
+        return Colors.green;
+      default:
+        return AppColors.textSecondary;
     }
   }
 
   Future<void> _showAddTaskDialog(BuildContext context) async {
     final titleController = TextEditingController();
     final descController = TextEditingController();
-    DateTime? selectedDate = DateTime.now();
-    String priority = 'medium';
+    DateTime selectedDate = DateTime.now();
+    TimeOfDay selectedTime = TimeOfDay.now();
+    Priority selectedPriority = Priority.medium;
+    List<String> repeatDays = [];
 
     await showDialog(
       context: context,
@@ -185,7 +179,7 @@ class _TasksScreenState extends State<TasksScreen> {
                   ListTile(
                     leading: Icon(Icons.calendar_today),
                     title: Text('Fecha límite'),
-                    subtitle: Text(_formatDate(selectedDate!)),
+                    subtitle: Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
                     onTap: () async {
                       final picked = await showDatePicker(
                         context: context,
@@ -198,20 +192,60 @@ class _TasksScreenState extends State<TasksScreen> {
                       }
                     },
                   ),
+                  ListTile(
+                    leading: Icon(Icons.access_time),
+                    title: Text('Hora límite'),
+                    subtitle: Text(selectedTime.format(context)),
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: selectedTime,
+                      );
+                      if (picked != null) {
+                        setState(() => selectedTime = picked);
+                      }
+                    },
+                  ),
                   SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: priority,
-                    items: ['high', 'medium', 'low'].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value[0].toUpperCase() + value.substring(1)),
+                  DropdownButtonFormField<Priority>(
+                    value: selectedPriority,
+                    items: Priority.values.map((Priority priority) {
+                      return DropdownMenuItem<Priority>(
+                        value: priority,
+                        child: Text(
+                          priority.toString().split('.').last.toUpperCase(),
+                        ),
                       );
                     }).toList(),
-                    onChanged: (value) => setState(() => priority = value!),
+                    onChanged: (Priority? value) {
+                      if (value != null) {
+                        setState(() => selectedPriority = value);
+                      }
+                    },
                     decoration: InputDecoration(
                       labelText: 'Prioridad',
                       border: OutlineInputBorder(),
                     ),
+                  ),
+                  SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    children: ['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) {
+                      final isSelected = repeatDays.contains(day);
+                      return FilterChip(
+                        label: Text(day),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              repeatDays.add(day);
+                            } else {
+                              repeatDays.remove(day);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
                   ),
                 ],
               ),
@@ -238,10 +272,13 @@ class _TasksScreenState extends State<TasksScreen> {
                     await _firestore.collection('tasks').add({
                       'title': titleController.text.trim(),
                       'description': descController.text.trim(),
-                      'dueDate': selectedDate,
+                      'dueDate': selectedDate.toIso8601String(),
+                      'dueTime': '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
                       'isCompleted': false,
-                      'priority': priority,
+                      'priority': selectedPriority.toString().split('.').last,
+                      'repeatDays': repeatDays,
                       'userId': user.uid,
+                      'goalId': '', // Ajusta según tu necesidad
                       'createdAt': FieldValue.serverTimestamp(),
                     });
 
@@ -251,7 +288,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')),
+                      SnackBar(content: Text('Error al crear tarea: $e')),
                     );
                   }
                 },
@@ -262,5 +299,115 @@ class _TasksScreenState extends State<TasksScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 50, color: AppColors.error),
+          SizedBox(height: 20),
+          Text(
+            'Ocurrió un error',
+            style: AppTextStyles.headlineSmall,
+          ),
+          SizedBox(height: 10),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              error,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMedium,
+            ),
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => setState(() {}),
+            child: Text('Reintentar', style: TextStyle(color: AppColors.accentPink),),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAuthRequiredState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.login, size: 50, color: AppColors.primaryPurple),
+          SizedBox(height: 20),
+          Text(
+            'Debes iniciar sesión',
+            style: AppTextStyles.headlineSmall,
+          ),
+          SizedBox(height: 10),
+          Text(
+            'Para ver tus tareas necesitas autenticarte',
+            style: AppTextStyles.bodyMedium,
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () => Navigator.pushNamed(context, '/login'),
+            child: Text('Iniciar sesión'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.task, size: 60, color: AppColors.textSecondary),
+          SizedBox(height: 20),
+          Text('No tienes tareas pendientes', style: AppTextStyles.bodyLarge),
+          SizedBox(height: 20),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            onPressed: () => _showAddTaskDialog(context),
+            child: Text('Crear primera tarea', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleTaskCompletion(TaskModel task) async {
+    try {
+      await _firestore.collection('tasks').doc(task.id).update({
+        'isCompleted': !task.isCompleted,
+        'completedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al actualizar tarea: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteTask(String taskId) async {
+    try {
+      await _firestore.collection('tasks').doc(taskId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Tarea eliminada con éxito')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al eliminar tarea: $e')),
+      );
+    }
   }
 }
