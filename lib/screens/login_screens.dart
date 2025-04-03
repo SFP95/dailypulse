@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: EdgeInsets.all(25),
                     margin: EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.primarylila,
+                      color: AppColors.primaryLila,
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Text(
                               'Daily Pulse',
                               style: AppTextStyles.headlineLarge.copyWith(
-                                color: AppColors.primarypurple,
+                                color: AppColors.primaryPurple,
                               ),
                             ),
                             SizedBox(height: 30),
@@ -117,12 +117,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
                                   width: 2,
-                                  color: AppColors.primaryyellow,
+                                  color: AppColors.accentYellow,
                                 ),
                               ),
                               labelText: 'Email',
                               labelStyle: TextStyle(
-                                  color: AppColors.primarypurple,
+                                  color: AppColors.primaryPurple,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold),
                               contentPadding: EdgeInsets.symmetric(
@@ -147,12 +147,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
                                   width: 2,
-                                  color: AppColors.primaryyellow,
+                                  color: AppColors.accentYellow,
                                 ),
                               ),
                               labelText: 'Contraseña',
                               labelStyle: TextStyle(
-                                  color: AppColors.primarypurple,
+                                  color: AppColors.primaryPurple,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold),
                               contentPadding: EdgeInsets.symmetric(
@@ -165,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (_isLoading)
                             CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColors.primarypurple),
+                                  AppColors.primaryPurple),
                             )
                           else
                             SizedBox(
@@ -173,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   padding: EdgeInsets.symmetric(vertical: 15),
-                                  backgroundColor: AppColors.primaryyellow,
+                                  backgroundColor: AppColors.accentYellow,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -182,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: Text(
                                   'Iniciar sesión',
                                   style: TextStyle(
-                                    color: AppColors.primarypurple,
+                                    color: AppColors.primaryPurple,
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
                                   ),

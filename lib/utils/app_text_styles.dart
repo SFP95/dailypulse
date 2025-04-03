@@ -68,7 +68,7 @@ class AppTextStyles {
   static const TextStyle labelLarge = TextStyle(
     fontSize: 15.0,
     fontWeight: FontWeight.w500, // Medium
-    color: AppColors.primarypurple,
+    color: AppColors.primaryPurple,
   );
 
   static const headlineMedium = TextStyle(

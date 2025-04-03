@@ -1,22 +1,26 @@
 import 'dart:ui';
 
+import 'package:flutter/material.dart';
+
 class AppColors {
-  // Primarios
-  static const primarylila = Color(0xFFBB9FDC);  // Morado principal
-  static const primarypurple = Color(0xFF444068);
-  static const primarypink = Color(0xFFF0BBD9);
-  static const primaryyellow = Color(0xFFF2D8A7);
-  static const primaryblue = Color(0xFFACBDEC);
 
+  // --- Paleta Principal (Inspirada en tus imágenes) ---
+  static const primaryPurple = Color(0xFF444068); // Morado oscuro ("SHOP NAME")
+  static const primaryLila = Color(0xFFBB9FDC);   // Lila claro
+  static const accentPink = Color(0xFFF0BBD9);    // Rosa ("Family Expenses")
+  static const accentYellow = Color(0xFFF2D8A7);  // Amarillo pastel
+  static const accentBlue = Color(0xFFACBDEC);    // Azul claro
 
-  // Secundarios
-  static const success = Color(0xFF6BCB94);  // Verde
-  static const warning = Color(0xFFFC6F6F);  // Naranja
-  static const naranja = Color(0xFFEACC81);  // medium
-  static const disabled = Color(0xC8B0AEAE);
+  // --- Estados (Feedback visual) ---
+  static const success = Color(0xFF6BCB94);      // Verde
+  static const error = Color(0xFFFC6F6F);       // Rojo/Naranja (antes "warning")
+  static const warning = Color(0xFFEACC81);     // Naranja (antes "naranja")
+  static const disabled = Color(0xC8B0AEAE);    // Gris deshabilitado
 
-  // Neutrales
-  static const background = Color(0xFFF8F6F9);
-  static const textPrimary = Color(0xFF212121);
-  static const textSecondary = Color(0xE78D8D8D);
+  // --- Neutrales (Fondos y texto) ---
+  static const background = Color(0xFFF8F6F9);   // Fondo claro
+  static const cardBackground = Colors.white;    // Nuevo: para tarjetas
+  static const textPrimary = Color(0xFF212121);  // Texto oscuro
+  static const textSecondary = Color(0xE78D8D8D);// Texto secundario
+  static const divider = Color(0xFFEEEEEE);      // Nuevo: para separadores
 }

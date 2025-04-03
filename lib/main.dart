@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         theme: ThemeData(
-          primaryColor: AppColors.primarylila,
+          primaryColor: AppColors.primaryLila,
           fontFamily: 'Inter', // Fuente por defecto
           textTheme: const TextTheme(
             headlineLarge: AppTextStyles.headlineLarge,

@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppColors.primaryyellow,
+        backgroundColor: AppColors.accentYellow,
         selectedItemColor: AppColors.textPrimary,
         unselectedItemColor: AppColors.textSecondary,
         currentIndex: _selectedIndex,
@@ -80,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddGoalDialog,
         child: Icon(Icons.add),
-        backgroundColor: AppColors.primarylila,
+        backgroundColor: AppColors.primaryLila,
       ),
     );
   }
@@ -169,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       '${(goal.currentProgress * 100).toStringAsFixed(0)}%',
                       style: TextStyle(color: Colors.white),
                     ),
-                    backgroundColor: AppColors.primarylila,
+                    backgroundColor: AppColors.primaryLila,
                   ),
                 ],
               ),
@@ -184,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
               LinearProgressIndicator(
                 value: goal.currentProgress,
                 backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primarylila),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryLila),
                 minHeight: 8,
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -258,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _signOut,
             child: Text('Cerrar sesión'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryblue,
+              backgroundColor: AppColors.accentBlue,
             ),
           ),
         ],

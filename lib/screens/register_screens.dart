@@ -99,7 +99,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     padding: EdgeInsets.all(25),
                     margin: EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.primarylila,
+                      color: AppColors.primaryLila,
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
@@ -118,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             Text(
                               'Crear Cuenta',
                               style: AppTextStyles.headlineLarge.copyWith(
-                                color: AppColors.primarypurple,
+                                color: AppColors.primaryPurple,
                               ),
                             ),
                             SizedBox(height: 20),
@@ -137,11 +137,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
                                   width: 2,
-                                  color: AppColors.primaryyellow,
+                                  color: AppColors.accentYellow,
                                 ),
                               ),
                               labelText: 'Nombre completo',
-                              labelStyle: TextStyle(color: AppColors.primarypurple,
+                              labelStyle: TextStyle(color: AppColors.primaryPurple,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold),
                               contentPadding: EdgeInsets.symmetric(
@@ -167,11 +167,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
                                   width: 2,
-                                  color: AppColors.primaryyellow,
+                                  color: AppColors.accentYellow,
                                 ),
                               ),
                               labelText: 'Email',
-                              labelStyle: TextStyle(color: AppColors.primarypurple,
+                              labelStyle: TextStyle(color: AppColors.primaryPurple,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold),
                               contentPadding: EdgeInsets.symmetric(
@@ -199,11 +199,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
                                   width: 2,
-                                  color: AppColors.primaryyellow,
+                                  color: AppColors.accentYellow,
                                 ),
                               ),
                               labelText: 'Contraseña',
-                              labelStyle: TextStyle(color: AppColors.primarypurple,
+                              labelStyle: TextStyle(color: AppColors.primaryPurple,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold),
                               contentPadding: EdgeInsets.symmetric(
@@ -213,7 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   _obscurePassword
                                       ? Icons.visibility_off
                                       : Icons.visibility,
-                                  color: AppColors.primarypurple,
+                                  color: AppColors.primaryPurple,
                                 ),
                                 onPressed: () => setState(() {
                                   _obscurePassword = !_obscurePassword;
@@ -242,11 +242,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 borderSide: BorderSide(
                                   width: 2,
-                                  color: AppColors.primaryyellow,
+                                  color: AppColors.accentYellow,
                                 ),
                               ),
                               labelText: 'Confirmar contraseña',
-                              labelStyle: TextStyle(color: AppColors.primarypurple,
+                              labelStyle: TextStyle(color: AppColors.primaryPurple,
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold),
                               contentPadding: EdgeInsets.symmetric(
@@ -256,7 +256,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   _obscureConfirmPassword
                                       ? Icons.visibility_off
                                       : Icons.visibility,
-                                  color: AppColors.primarypurple,
+                                  color: AppColors.primaryPurple,
                                 ),
                                 onPressed: () => setState(() {
                                   _obscureConfirmPassword = !_obscureConfirmPassword;
@@ -268,7 +268,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           if (_isLoading)
                             CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  AppColors.primarypurple),
+                                  AppColors.primaryPurple),
                             )
                           else
                             SizedBox(
@@ -276,7 +276,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   padding: EdgeInsets.symmetric(vertical: 15),
-                                  backgroundColor: AppColors.primaryyellow,
+                                  backgroundColor: AppColors.accentYellow,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -285,7 +285,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 child: Text(
                                   'Registrarse',
                                   style: TextStyle(
-                                    color: AppColors.primarypurple,
+                                    color: AppColors.primaryPurple,
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
                                   ),

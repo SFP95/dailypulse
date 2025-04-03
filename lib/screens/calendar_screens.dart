@@ -168,7 +168,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         },
         calendarStyle: CalendarStyle(
           selectedDecoration: BoxDecoration(
-            color: AppColors.primaryblue,
+            color: AppColors.accentBlue,
             shape: BoxShape.circle,
           ),
           todayDecoration: BoxDecoration(
@@ -211,7 +211,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           formatButtonVisible: true,
           titleCentered: true,
           formatButtonDecoration: BoxDecoration(
-            color: AppColors.primarylila,
+            color: AppColors.primaryLila,
             borderRadius: BorderRadius.circular(20),
           ),
           formatButtonTextStyle: TextStyle(color: Colors.white),
@@ -277,7 +277,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         leading: Checkbox(
           value: task.isCompleted,
           onChanged: (value) => _toggleTaskCompletion(task),
-          activeColor: AppColors.primaryyellow,
+          activeColor: AppColors.accentYellow,
         ),
         title: Text(
           task.title,
@@ -327,14 +327,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.primaryblue.withOpacity(0.2),
+            color: AppColors.accentBlue.withOpacity(0.2),
             shape: BoxShape.circle,
           ),
           child: Center(
             child: Text(
               '$progressPercent%',
               style: TextStyle(
-                color: AppColors.primarypurple,
+                color: AppColors.primaryLila,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -362,13 +362,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Color _getTaskColor(TaskModel task) {
-    if (task.isCompleted) return AppColors.primaryblue!;
+    if (task.isCompleted) return AppColors.accentBlue!;
 
     switch (task.priority) {
       case Priority.high:
-        return AppColors.warning!;
+        return AppColors.error!;
       case Priority.medium:
-        return AppColors.naranja!;
+        return AppColors.warning!;
       case Priority.low:
         return AppColors.success!;
       default:
