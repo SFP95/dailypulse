@@ -28,16 +28,16 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         theme: ThemeData(
-          primaryColor: AppColors.primaryLila,
-          fontFamily: 'Inter', // Fuente por defecto
-          textTheme: const TextTheme(
-            headlineLarge: AppTextStyles.headlineLarge,
-            titleMedium: AppTextStyles.titleMedium,
-            bodyLarge: AppTextStyles.bodyLarge,
+          primaryColor: AppColors.primaryPurple,
+          scaffoldBackgroundColor: AppColors.background,
+          appBarTheme: AppBarTheme(
+            elevation: 0,
+            iconTheme: IconThemeData(color: AppColors.primaryPurple),
           ),
-          hintColor: Color.fromARGB(255, 215, 215, 215),
+          floatingActionButtonTheme: FloatingActionButtonThemeData(
+            backgroundColor: AppColors.primaryPurple,
+          ),
         ),
-
         home: AuthWrapper(),
         routes: {
           'profile': (context) => ProfileScreen(),
