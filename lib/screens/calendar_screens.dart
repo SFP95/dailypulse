@@ -75,7 +75,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.today, color: AppColors.primaryPurple),
+            icon: Icon(Icons.today,
+                color: AppColors.primaryPurple,
+                size: 33,),
             onPressed: () => setState(() {
               _focusedDay = DateTime.now();
               _selectedDay = DateTime.now();
