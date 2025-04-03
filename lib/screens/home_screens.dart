@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
           alignment: Alignment.center,
           child: Text('Daily Pulse',
               style: AppTextStyles.headlineLarge.copyWith(
-                  color: AppColors.accentPink,
+                  color: AppColors.accentBlue,
               )),
         ),
         /*actions: [
@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.vertical(
               top: Radius.circular(30)),
           child: BottomNavigationBar(
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.background,
             selectedItemColor: AppColors.primaryPurple,
             unselectedItemColor: AppColors.textSecondary,
             currentIndex: _selectedIndex,

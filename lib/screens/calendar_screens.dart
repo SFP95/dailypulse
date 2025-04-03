@@ -91,43 +91,55 @@ class _CalendarScreenState extends State<CalendarScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator(color: AppColors.primaryPurple));
           }
-
           return Column(
             children: [
               // Selector de vista
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 1, vertical: 1),
-                child: SegmentedButton<CalendarFormat>(
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(MaterialState.selected)) {
-                        return AppColors.primaryPurple;
-                      }
-                      return Colors.white;
-                    }),
-                    foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(MaterialState.selected)) {
-                        return Colors.white;
-                      }
-                      return AppColors.textPrimary;
-                    }),
+                padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryPurple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryPurple.withOpacity(0.8),
+                        blurRadius: 9,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
-                  segments: const [
-                    ButtonSegment(
-                      value: CalendarFormat.week,
-                      icon: Icon(Icons.calendar_view_week),
-                      label: Text('Semana'),
+                  child: SegmentedButton<CalendarFormat>(
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return AppColors.primaryPurple;
+                        }
+                        return Colors.white;
+                      }),
+                      foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return Colors.white;
+                        }
+                        return AppColors.textPrimary;
+                      }),
                     ),
-                    ButtonSegment(
-                      value: CalendarFormat.month,
-                      icon: Icon(Icons.calendar_view_month),
-                      label: Text('Mes'),
-                    ),
-                  ],
-                  selected: <CalendarFormat>{_calendarFormat},
-                  onSelectionChanged: (newFormat) {
-                    setState(() => _calendarFormat = newFormat.first);
-                  },
+                    segments: const [
+                      ButtonSegment(
+                        value: CalendarFormat.week,
+                        icon: Icon(Icons.calendar_view_week),
+                        label: Text('Semana'),
+                      ),
+                      ButtonSegment(
+                        value: CalendarFormat.month,
+                        icon: Icon(Icons.calendar_view_month),
+                        label: Text('Mes'),
+                      ),
+                    ],
+                    selected: <CalendarFormat>{_calendarFormat},
+                    onSelectionChanged: (newFormat) {
+                      setState(() => _calendarFormat = newFormat.first);
+                    },
+                  ),
                 ),
               ),
 
@@ -143,7 +155,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddEventDialog,
-        child: Icon(Icons.edit_calendar, color: Colors.white),
+        child: Icon(Icons.edit_calendar, color: AppColors.accentPink),
         backgroundColor: AppColors.primaryPurple,
         elevation: 4,
         shape: CircleBorder(),
@@ -169,6 +181,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         firstDay: DateTime.utc(2020, 1, 1),
         lastDay: DateTime.utc(2030, 12, 31),
         focusedDay: _focusedDay,
+        startingDayOfWeek: StartingDayOfWeek.monday,
         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
         onDaySelected: (selectedDay, focusedDay) {
           setState(() {
@@ -194,6 +207,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           weekendDecoration: BoxDecoration(
             shape: BoxShape.circle,
+            color: AppColors.accentPink.withOpacity(0.6),
           ),
           selectedDecoration: BoxDecoration(
             color: AppColors.primaryPurple,
