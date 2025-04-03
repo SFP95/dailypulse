@@ -1,9 +1,11 @@
 import 'package:dailypulse/screens/calendar_screens.dart';
 import 'package:dailypulse/screens/profile_screens.dart';
+import 'package:dailypulse/screens/task_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/goal_model.dart';
+import 'goal_detail_screen.dart';
 import 'goal_screens.dart';
 import '../utils/app_colors.dart';
 import '../utils/app_text_styles.dart';
@@ -60,9 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
             setState(() => _selectedIndex = index);
           },
           children: [
-            _buildGoalsSummary(),   //clase goals -- pendiente
+            GoalsScreen(),
+            //_buildGoalsSummary(),   //clase goals -- pendiente
             CalendarScreen(),       //clase calendar
-            _buildTasksList(),      //clase tasks -- pendiente
+            TasksScreen(),
+            //_buildTasksList(),      //clase tasks -- pendiente
             ProfileScreen(),        //clase profile
           ],
         ),

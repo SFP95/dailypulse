@@ -1,246 +1,241 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import '../models/goal_model.dart';
-import '../models/task_model.dart';
-import '../utils/firestore_service.dart';
+import '../utils/app_colors.dart';
+import '../utils/app_text_styles.dart';
 
-class GoalDetailScreen extends StatefulWidget {
-  final GoalModel goal;
-  const GoalDetailScreen({required this.goal, Key? key}) : super(key: key);
-
-  @override
-  _GoalDetailScreenState createState() => _GoalDetailScreenState();
-}
-
-class _GoalDetailScreenState extends State<GoalDetailScreen> {
-  final FirestoreService _firestore = FirestoreService();
-  late List<TaskModel> _tasks = [];
-  bool _isLoading = true;
-  String? _errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTasks();
-  }
-
-  Future<void> _loadTasks() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      final tasks = await _firestore.getTasks(widget.goal.id);
-      setState(() {
-        _tasks = tasks;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error al cargar las tareas: ${e.toString()}';
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _toggleTaskComplete(TaskModel task, bool isCompleted) async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      await _firestore.updateTaskCompletion(task.id, isCompleted);
-      await _loadTasks();
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error al actualizar la tarea: ${e.toString()}';
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_errorMessage!)),
-      );
-    }
-  }
-
+class GoalsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(widget.goal.title),
+        title: Text('Mis Metas', style: AppTextStyles.headlineMedium),
+        elevation: 0,
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LinearProgressIndicator(
-              value: widget.goal.currentProgress,
-              minHeight: 10,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).primaryColor,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${(widget.goal.currentProgress * 100).toStringAsFixed(1)}% completado',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Tareas diarias:',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Text(
-                  _errorMessage!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else
-              Expanded(
-                child: _tasks.isEmpty
-                    ? Center(
-                  child: Text(
-                    'No hay tareas disponibles',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                )
-                    : ListView.builder(
-                  itemCount: _tasks.length,
-                  itemBuilder: (ctx, i) => Card(
-                    margin: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: CheckboxListTile(
-                      title: Text(
-                        _tasks[i].title,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          decoration: _tasks[i].isCompleted
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                      ),
-                      value: _tasks[i].isCompleted,
-                      onChanged: (value) => _toggleTaskComplete(_tasks[i], value!),
-                      secondary: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _deleteTask(_tasks[i]),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('goals')
+            .where('userId', isEqualTo: currentUser?.uid)
+            .orderBy('createdAt', descending: true)
+            .orderBy(FieldPath.documentId, descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator(color: AppColors.primaryPurple));
+          }
+
+          final goals = snapshot.data!.docs.map((doc) {
+            return GoalModel.fromMap({...doc.data() as Map<String, dynamic>, 'id': doc.id});
+          }).toList();
+
+          if (goals.isEmpty) {
+            return _buildEmptyState(context);
+          }
+
+          return ListView.builder(
+            padding: EdgeInsets.all(16),
+            itemCount: goals.length,
+            itemBuilder: (context, index) => _buildGoalCard(goals[index]),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addNewTask,
-        child: const Icon(Icons.add),
+        onPressed: () => _showAddGoalDialog(context),
+        child: Icon(Icons.add, color: Colors.white),
+        backgroundColor: AppColors.primaryPurple,
+        shape: CircleBorder(),
       ),
     );
   }
 
-  Future<void> _addNewTask() async {
-    final TextEditingController controller = TextEditingController();
-
-    try {
-      final String? newTaskTitle = await showDialog<String>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Nueva tarea'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              hintText: 'Título de la tarea',
-              border: OutlineInputBorder(),
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.flag, size: 60, color: AppColors.textSecondary),
+          SizedBox(height: 20),
+          Text('No tienes metas creadas', style: AppTextStyles.bodyLarge),
+          SizedBox(height: 20),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            autofocus: true,
+            onPressed: () => _showAddGoalDialog(context),
+            child: Text('Crear primera meta', style: TextStyle(color: Colors.white)),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (controller.text.trim().isNotEmpty) {
-                  Navigator.pop(context, controller.text.trim());
-                }
-              },
-              child: const Text('Guardar'),
-            ),
-          ],
-        ),
-      );
-
-      if (newTaskTitle != null && newTaskTitle.isNotEmpty) {
-        setState(() => _isLoading = true);
-
-        final newTask = TaskModel(
-          id: '', // Firestore generará el ID automáticamente
-          goalId: widget.goal.id,
-          title: newTaskTitle,
-          isCompleted: false,
-          createdAt: DateTime.now(),
-          userId: '',
-          dueTime: TimeOfDay.now(),
-          dueDate: DateTime.now(),
-        );
-
-        await _firestore.addTask(newTask);
-        await _loadTasks(); // Recargar la lista de tareas
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error al agregar tarea: ${e.toString()}';
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al agregar tarea: ${e.toString()}')),
-      );
-    }
+        ],
+      ),
+    );
   }
 
-  Future<void> _deleteTask(TaskModel task) async {
-    try {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Eliminar tarea'),
-          content: Text('¿Estás seguro de eliminar "${task.title}"?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
+  Widget _buildGoalCard(GoalModel goal) {
+    final progressPercent = (goal.currentProgress * 100).toInt();
+
+    return Card(
+      margin: EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    goal.title,
+                    style: AppTextStyles.titleLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Chip(
+                  label: Text('$progressPercent%'),
+                  backgroundColor: _getProgressColor(goal.currentProgress),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+            if (goal.description.isNotEmpty) ...[
+              SizedBox(height: 8),
+              Text(
+                goal.description,
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+            SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: goal.currentProgress,
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(_getProgressColor(goal.currentProgress)),
+                minHeight: 8,
+              ),
+            ),
+            SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Vence: ${_formatDate(goal.dueDate)}',
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete, color: AppColors.error),
+                  onPressed: () => _deleteGoal(goal.id),
+                ),
+              ],
             ),
           ],
         ),
-      );
+      ),
+    );
+  }
 
-      if (confirm == true) {
-        setState(() => _isLoading = true);
-        await _firestore.deleteTask(task.id);
-        await _loadTasks(); // Recargar la lista de tareas
-      }
+  Color _getProgressColor(double progress) {
+    if (progress < 0.3) return AppColors.error.withOpacity(0.2);
+    if (progress < 0.7) return AppColors.warning.withOpacity(0.2);
+    return AppColors.success.withOpacity(0.2);
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('dd/MM/yyyy').format(date);
+  }
+
+  Future<void> _showAddGoalDialog(BuildContext context) async {
+    final titleController = TextEditingController();
+    final descController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Nueva Meta'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: InputDecoration(
+                labelText: 'Título*',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: descController,
+              decoration: InputDecoration(
+                labelText: 'Descripción',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryPurple),
+            onPressed: () async {
+              if (titleController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('El título es obligatorio')),
+                );
+                return;
+              }
+
+              try {
+                final user = FirebaseAuth.instance.currentUser;
+                if (user == null) return;
+
+                await FirebaseFirestore.instance.collection('goals').add({
+                  'title': titleController.text.trim(),
+                  'description': descController.text.trim(),
+                  'currentProgress': 0.0,
+                  'dueDate': DateTime.now().add(Duration(days: 30)),
+                  'userId': user.uid,
+                  'createdAt': FieldValue.serverTimestamp(),
+                  'isCompleted': false,
+                });
+
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Meta creada con éxito')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $e')),
+                );
+              }
+            },
+            child: Text('Guardar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteGoal(String goalId) async {
+    try {
+      await FirebaseFirestore.instance.collection('goals').doc(goalId).delete();
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Error al eliminar tarea: ${e.toString()}';
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al eliminar tarea: ${e.toString()}')),
-      );
+      print('Error al eliminar meta: $e');
     }
   }
 }

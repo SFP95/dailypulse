@@ -18,6 +18,9 @@ class TaskModel {
   final List<String> repeatDays;
   final DateTime createdAt;
   final Priority priority;
+  final String description;
+
+  String get descriptionOrEmpty => description ?? '';
 
   TaskModel({
     required this.id,
@@ -30,6 +33,7 @@ class TaskModel {
     this.repeatDays = const [],
     required this.createdAt,
     this.priority = Priority.medium,
+    this.description = '', // Valor por defecto vacío
   });
 
   // Versión CORRECTA de fromMap (ID dentro del mapa)
