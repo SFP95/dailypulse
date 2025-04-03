@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
           alignment: Alignment.center,
           child: Text('Daily Pulse',
               style: AppTextStyles.headlineLarge.copyWith(
-                  color: AppColors.accentBlue,
+                  color: AppColors.background,
               )),
         ),
         /*actions: [

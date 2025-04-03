@@ -146,7 +146,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
               // Calendario
               _buildCalendar(),
-              SizedBox(height: 10),
+              //SizedBox(height: 1),
 
               // Lista de eventos
               Expanded(child: _buildEventList()),
@@ -268,7 +268,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     return ListView(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0.01),
       children: [
         if (dayGoals.isNotEmpty) ...[
           _buildSectionTitle('Metas que vencen', Icons.flag),
@@ -453,7 +453,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   String _formatDate(DateTime date) {
     return DateFormat('dd/MM/yyyy').format(date);
   }
-
 
   Future<void> _toggleTaskCompletion(TaskModel task) async {
     await FirebaseFirestore.instance
