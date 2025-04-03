@@ -52,6 +52,8 @@ class TaskModel {
     );
   }
 
+
+
   static Priority _parsePriority(dynamic priority) {
   if (priority == null) return Priority.medium;
   if (priority is String) {

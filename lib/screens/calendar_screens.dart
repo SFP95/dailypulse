@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:ui';
+import 'package:intl/intl.dart';
 import '../models/task_model.dart';
 import '../models/goal_model.dart';
 import '../utils/app_colors.dart';
@@ -67,21 +69,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Calendario', style: AppTextStyles.headlineMedium),
-        backgroundColor: AppColors.background,
+        title: Text('Calendario', style: AppTextStyles.headlineMedium.copyWith(color: AppColors.textPrimary)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.today),
+            icon: Icon(Icons.today, color: AppColors.primaryPurple),
             onPressed: () => setState(() {
               _focusedDay = DateTime.now();
               _selectedDay = DateTime.now();
-            }),
-          ),
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: () => setState(() {
-              _loadingFuture = _loadEvents();
             }),
           ),
         ],
@@ -90,7 +89,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         future: _loadingFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(color: AppColors.primaryPurple));
           }
 
           return Column(
@@ -99,6 +98,20 @@ class _CalendarScreenState extends State<CalendarScreen> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: SegmentedButton<CalendarFormat>(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                      if (states.contains(MaterialState.selected)) {
+                        return AppColors.primaryPurple;
+                      }
+                      return Colors.white;
+                    }),
+                    foregroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+                      if (states.contains(MaterialState.selected)) {
+                        return Colors.white;
+                      }
+                      return AppColors.textPrimary;
+                    }),
+                  ),
                   segments: const [
                     ButtonSegment(
                       value: CalendarFormat.week,
@@ -130,18 +143,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddEventDialog,
-        child: Icon(Icons.add),
-        backgroundColor: AppColors.background,
+        child: Icon(Icons.add, color: Colors.white),
+        backgroundColor: AppColors.primaryPurple,
+        elevation: 4,
+        shape: CircleBorder(),
       ),
     );
   }
 
   Widget _buildCalendar() {
-    return Card(
-      margin: EdgeInsets.all(12),
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            spreadRadius: 2,
+          ),
+        ],
       ),
       child: TableCalendar(
         firstDay: DateTime.utc(2020, 1, 1),
@@ -167,54 +189,40 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ];
         },
         calendarStyle: CalendarStyle(
+          defaultDecoration: BoxDecoration(
+            shape: BoxShape.circle,
+          ),
+          weekendDecoration: BoxDecoration(
+            shape: BoxShape.circle,
+          ),
           selectedDecoration: BoxDecoration(
-            color: AppColors.accentBlue,
+            color: AppColors.primaryPurple,
             shape: BoxShape.circle,
           ),
           todayDecoration: BoxDecoration(
-            color: AppColors.textPrimary.withOpacity(0.3),
+            color: AppColors.primaryLila.withOpacity(0.3),
             shape: BoxShape.circle,
           ),
           markerDecoration: BoxDecoration(
-            color: AppColors.textPrimary,
+            color: AppColors.primaryPurple,
             shape: BoxShape.circle,
           ),
           markersAlignment: Alignment.bottomRight,
           markersMaxCount: 3,
         ),
-        calendarBuilders: CalendarBuilders(
-          markerBuilder: (context, date, events) {
-            if (events.isNotEmpty) {
-              return Container(
-                width: 16,
-                height: 16,
-                margin: EdgeInsets.only(right: 1, bottom: 1),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    '${events.length}',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-              );
-            }
-            return null;
-          },
-        ),
         headerStyle: HeaderStyle(
-          formatButtonVisible: true,
+          formatButtonVisible: false,
           titleCentered: true,
-          formatButtonDecoration: BoxDecoration(
-            color: AppColors.primaryLila,
-            borderRadius: BorderRadius.circular(20),
+          titleTextStyle: AppTextStyles.titleMedium.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
           ),
-          formatButtonTextStyle: TextStyle(color: Colors.white),
+          leftChevronIcon: Icon(Icons.chevron_left, color: AppColors.primaryPurple),
+          rightChevronIcon: Icon(Icons.chevron_right, color: AppColors.primaryPurple),
+        ),
+        daysOfWeekStyle: DaysOfWeekStyle(
+          weekdayStyle: TextStyle(color: AppColors.textPrimary),
+          weekendStyle: TextStyle(color: AppColors.textPrimary),
         ),
       ),
     );
@@ -230,15 +238,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     if (dayTasks.isEmpty && dayGoals.isEmpty) {
       return Center(
-        child: Text(
-          'No hay eventos para este día',
-          style: AppTextStyles.bodyLarge,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_note, size: 60, color: AppColors.textSecondary),
+            SizedBox(height: 16),
+            Text(
+              'No hay eventos para este día',
+              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
         ),
       );
     }
 
     return ListView(
-      padding: EdgeInsets.symmetric(horizontal: 12),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       children: [
         if (dayGoals.isNotEmpty) ...[
           _buildSectionTitle('Metas que vencen', Icons.flag),
@@ -258,9 +273,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
       padding: EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.background),
+          Icon(icon, color: AppColors.primaryPurple, size: 24),
           SizedBox(width: 8),
-          Text(title, style: AppTextStyles.titleMedium),
+          Text(
+            title,
+            style: AppTextStyles.titleMedium.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -268,47 +289,78 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _buildTaskItem(TaskModel task) {
     return Card(
-      margin: EdgeInsets.only(bottom: 8),
-      color: _getTaskColor(task),
+      margin: EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
+      elevation: 2,
       child: ListTile(
-        leading: Checkbox(
-          value: task.isCompleted,
-          onChanged: (value) => _toggleTaskCompletion(task),
-          activeColor: AppColors.accentYellow,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: _getTaskColor(task).withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Icon(
+              task.isCompleted ? Icons.check : Icons.access_time,
+              color: _getTaskColor(task),
+            ),
+          ),
         ),
         title: Text(
           task.title,
-          style: TextStyle(
+          style: AppTextStyles.bodyLarge.copyWith(
+            color: AppColors.textPrimary,
             decoration: task.isCompleted ? TextDecoration.lineThrough : null,
           ),
         ),
-        subtitle: task.goalId != null && task.goalId!.isNotEmpty
-            ? FutureBuilder<DocumentSnapshot>(
-          future: FirebaseFirestore.instance
-              .collection('goals')
-              .doc(task.goalId)
-              .get(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              final goal = GoalModel.fromMap({
-                ...?snapshot.data?.data() as Map<String, dynamic>?,
-                'id': task.goalId
-              });
-              return Text(
-                'Meta: ${goal.title}',
-                style: AppTextStyles.bodySmall,
-              );
-            }
-            return SizedBox();
-          },
-        )
-            : null,
-        trailing: IconButton(
-          icon: Icon(Icons.delete, color: Colors.red),
-          onPressed: () => _deleteTask(task),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if ((task.toMap()['description'] as String?)?.isNotEmpty ?? false)
+              Text(
+                task.toMap()['description'] as String,
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            if (task.goalId != null && task.goalId!.isNotEmpty)
+              FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('goals')
+                    .doc(task.goalId)
+                    .get(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    final goal = GoalModel.fromMap({
+                      ...?snapshot.data?.data() as Map<String, dynamic>?,
+                      'id': task.goalId
+                    });
+                    return Text(
+                      'Meta: ${goal.title}',
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryPurple),
+                    );
+                  }
+                  return SizedBox();
+                },
+              ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(Icons.check, color: AppColors.success),
+              onPressed: () => _toggleTaskCompletion(task),
+            ),
+            IconButton(
+              icon: Icon(Icons.delete, color: AppColors.error),
+              onPressed: () => _deleteTask(task),
+            ),
+          ],
         ),
       ),
     );
@@ -318,63 +370,75 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final progressPercent = (goal.currentProgress * 100).toInt();
 
     return Card(
-      margin: EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
       ),
+      elevation: 2,
       child: ListTile(
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         leading: Container(
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.accentBlue.withOpacity(0.2),
+            color: AppColors.primaryPurple.withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: Center(
             child: Text(
               '$progressPercent%',
               style: TextStyle(
-                color: AppColors.primaryLila,
+                color: AppColors.primaryPurple,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ),
-        title: Text(goal.title, style: AppTextStyles.bodyLarge),
+        title: Text(
+          goal.title,
+          style: AppTextStyles.bodyLarge.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: goal.currentProgress,
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryPurple),
+                minHeight: 6,
+              ),
+            ),
             SizedBox(height: 4),
-            LinearProgressIndicator(
-              value: goal.currentProgress,
-              backgroundColor: Colors.grey[200],
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.background),
-              minHeight: 6,
-              borderRadius: BorderRadius.circular(3),
+            Text(
+              'Fecha límite: ${_formatDate(goal.dueDate)}',
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
           ],
         ),
-        onTap: () {
-          // Navegar a pantalla de detalle de meta
-        },
       ),
     );
   }
 
   Color _getTaskColor(TaskModel task) {
-    if (task.isCompleted) return AppColors.accentBlue!;
-
+    if (task.isCompleted) return AppColors.success;
     switch (task.priority) {
-      case Priority.high:
-        return AppColors.error!;
-      case Priority.medium:
-        return AppColors.warning!;
-      case Priority.low:
-        return AppColors.success!;
-      default:
-        return Theme.of(context).cardTheme.color!;
+      case Priority.high: return AppColors.error;
+      case Priority.medium: return AppColors.warning;
+      case Priority.low: return AppColors.success;
+      default: return AppColors.primaryPurple;
     }
   }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('dd/MM/yyyy').format(date);
+  }
+
 
   Future<void> _toggleTaskCompletion(TaskModel task) async {
     await FirebaseFirestore.instance

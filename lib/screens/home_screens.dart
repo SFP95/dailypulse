@@ -23,9 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        //title: Text('DailyPulse', style: AppTextStyles.headlineLarge),
-
+        backgroundColor: AppColors.primaryPurple,
+        title: Text('DailyPulse', style: AppTextStyles.headlineLarge.copyWith(color: Colors.white)),
         actions: [
           IconButton(
             icon: Icon(Icons.logout, color: Colors.white),
@@ -33,54 +34,78 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() => _selectedIndex = index);
-        },
-        children: [
-          // Página 1: Resumen de Metas
-          _buildGoalsSummary(),
-          CalendarScreen(),
-          // Página 2: Tareas Pendientes
-          _buildTasksList(),
-          // Página 3: Perfil
-          _buildProfileSection(),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppColors.accentYellow,
-        selectedItemColor: AppColors.textPrimary,
-        unselectedItemColor: AppColors.textSecondary,
-        currentIndex: _selectedIndex,
-        onTap: (index) => _pageController.animateToPage(
-          index,
-          duration: Duration(milliseconds: 500),
-          curve: Curves.easeInOut,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [AppColors.background, Colors.white],
+          ),
         ),
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assessment),
-            label: 'Resumen',
+        child: PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() => _selectedIndex = index);
+          },
+          children: [
+            _buildGoalsSummary(),
+            CalendarScreen(),
+            _buildTasksList(),
+            _buildProfileSection(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(color: Colors.black12, blurRadius: 10),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          child: BottomNavigationBar(
+            backgroundColor: Colors.white,
+            selectedItemColor: AppColors.primaryPurple,
+            unselectedItemColor: AppColors.textSecondary,
+            currentIndex: _selectedIndex,
+            type: BottomNavigationBarType.fixed,
+            selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
+            onTap: (index) => _pageController.animateToPage(
+              index,
+              duration: Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            ),
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.flag_outlined),
+                activeIcon: Icon(Icons.flag),
+                label: 'Metas',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.calendar_today_outlined),
+                activeIcon: Icon(Icons.calendar_today),
+                label: 'Calendario',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.checklist_outlined),
+                activeIcon: Icon(Icons.checklist),
+                label: 'Tareas',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.person_outlined),
+                activeIcon: Icon(Icons.person),
+                label: 'Perfil',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'Resumen',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.checklist),
-            label: 'Tareas',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Perfil',
-          ),
-        ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddGoalDialog,
-        child: Icon(Icons.add),
-        backgroundColor: AppColors.primaryLila,
+        child: Icon(Icons.add, color: Colors.white,),
+        backgroundColor: AppColors.primaryPurple,
+        elevation: 4,
+        shape: CircleBorder(),
       ),
     );
   }
@@ -97,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
 
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator(color: AppColors.primaryPurple));
         }
 
         final goals = snapshot.data!.docs.map((doc) {
@@ -109,12 +134,18 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Icon(Icons.not_interested, size: 60, color: AppColors.textSecondary),
+                SizedBox(height: 20),
                 Text('No tienes metas creadas',
                     style: AppTextStyles.bodyLarge),
                 SizedBox(height: 20),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryPurple,
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
                   onPressed: _showAddGoalDialog,
-                  child: Text('Crear primera meta'),
+                  child: Text('Crear primera meta', style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
@@ -133,15 +164,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
   Widget _buildGoalCard(GoalModel goal, BuildContext context) {
     return Card(
       margin: EdgeInsets.only(bottom: 16),
-      elevation: 4,
+      elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           Navigator.push(
             context,
@@ -158,48 +190,65 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    goal.title,
-                    style: AppTextStyles.titleLarge.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Flexible(
+                    child: Text(
+                      goal.title,
+                      style: AppTextStyles.titleLarge.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
-                  Chip(
-                    label: Text(
-                      '${(goal.currentProgress * 100).toStringAsFixed(0)}%',
-                      style: TextStyle(color: Colors.white),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _getProgressColor(goal.currentProgress),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    backgroundColor: AppColors.primaryLila,
+                    child: Text(
+                      '${(goal.currentProgress * 100).toStringAsFixed(0)}%',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
                 ],
               ),
               SizedBox(height: 8),
-              Text(
-                goal.description,
-                style: AppTextStyles.bodyMedium,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              if (goal.description.isNotEmpty)
+                Text(
+                  goal.description,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               SizedBox(height: 16),
-              LinearProgressIndicator(
-                value: goal.currentProgress,
-                backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryLila),
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(4),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: goal.currentProgress,
+                  backgroundColor: Colors.grey[200],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      _getProgressColor(goal.currentProgress)),
+                  minHeight: 8,
+                ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'Fecha límite: ${_formatDate(goal.dueDate)}',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: Colors.grey[600],
+                      color: AppColors.textSecondary,
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.arrow_forward_ios, size: 16),
+                    icon: Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.primaryPurple),
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -218,6 +267,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+  Color _getProgressColor(double progress) {
+    if (progress < 0.3) return AppColors.error;
+    if (progress < 0.7) return AppColors.warning;
+    return AppColors.success;
+  }
+
   Widget _buildTasksList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -227,38 +283,64 @@ class _HomeScreenState extends State<HomeScreen> {
           .orderBy('dueDate')
           .snapshots(),
       builder: (context, snapshot) {
-        // Implementación similar a _buildGoalsSummary()
-        // Mostrar lista de tareas pendientes
-        return Center(child: Text('Lista de tareas pendientes'));
+        // Mantén tu implementación actual de tasks
+        return Center(child: Text('Lista de tareas pendientes', style: AppTextStyles.bodyLarge));
       },
     );
   }
 
   Widget _buildProfileSection() {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircleAvatar(
-            radius: 50,
-           // backgroundImage: Icon(Icons.person)
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primaryLila,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                )
+              ],
+            ),
+            child: Icon(Icons.person, size: 60, color: Colors.white),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 24),
           Text(
             'Bienvenido',
-            style: AppTextStyles.headlineSmall,
+            style: AppTextStyles.headlineSmall.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          SizedBox(height: 10),
+          SizedBox(height: 8),
           Text(
-            FirebaseAuth.instance.currentUser?.email ?? '',
-            style: AppTextStyles.bodyMedium,
+            (user?.displayName ?? '').isNotEmpty
+                ? '${user!.displayName![0].toUpperCase()}${user.displayName!.substring(1).toLowerCase()}'
+                : '',
+            style: AppTextStyles.bodyMedium.copyWith(
+              fontSize: 20,
+              color: AppColors.textPrimary,
+            ),
           ),
-          SizedBox(height: 20),
-          ElevatedButton(
+          SizedBox(height: 32),
+          ElevatedButton.icon(
             onPressed: _signOut,
-            child: Text('Cerrar sesión'),
+            icon: Icon(Icons.logout, size: 20, color: AppColors.primaryLila,),
+            label: Text('Cerrar sesión',style: TextStyle(color: AppColors.primaryLila,),),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accentBlue,
+              backgroundColor: AppColors.primaryPurple,
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
           ),
         ],
