@@ -96,7 +96,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             children: [
               // Selector de vista
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.symmetric(horizontal: 1, vertical: 1),
                 child: SegmentedButton<CalendarFormat>(
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
@@ -143,7 +143,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddEventDialog,
-        child: Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.edit_calendar, color: Colors.white),
         backgroundColor: AppColors.primaryPurple,
         elevation: 4,
         shape: CircleBorder(),
@@ -153,15 +153,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _buildCalendar() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      margin: EdgeInsets.symmetric(horizontal: 20,vertical: 30),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.accentBlue.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            spreadRadius: 2,
+            color: AppColors.accentBlue.withOpacity(0.8),
+            blurRadius: 9,
+            spreadRadius: 1,
           ),
         ],
       ),
@@ -200,7 +200,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             shape: BoxShape.circle,
           ),
           todayDecoration: BoxDecoration(
-            color: AppColors.primaryLila.withOpacity(0.3),
+            color: AppColors.primaryPurple.withOpacity(0.3),
             shape: BoxShape.circle,
           ),
           markerDecoration: BoxDecoration(
