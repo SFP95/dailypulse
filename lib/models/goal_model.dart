@@ -7,31 +7,32 @@ class GoalModel {
   final double currentProgress;
   final DateTime dueDate;
   final String userId;
+  final DateTime createdAt;
+  final bool isCompleted;
 
   GoalModel({
     required this.id,
     required this.title,
     required this.description,
-    required this.currentProgress,
+    this.currentProgress = 0.0,
     required this.dueDate,
     required this.userId,
+    required this.createdAt,
+    this.isCompleted = false,
   });
 
-  // Método para convertir a Map (para Firestore)
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'title': title,
       'description': description,
       'currentProgress': currentProgress,
-      'dueDate': dueDate.millisecondsSinceEpoch,
+      'dueDate': Timestamp.fromDate(dueDate),
       'userId': userId,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'isCompleted': isCompleted,
     };
   }
 
-
-
-  // Método para crear desde Map (desde Firestore)
   factory GoalModel.fromMap(Map<String, dynamic> map) {
     return GoalModel(
       id: map['id'] ?? '',
@@ -40,22 +41,19 @@ class GoalModel {
       currentProgress: (map['currentProgress'] ?? 0.0).toDouble(),
       dueDate: (map['dueDate'] as Timestamp).toDate(),
       userId: map['userId'] ?? '',
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      isCompleted: map['isCompleted'] ?? false,
     );
   }
 
-  // Método empty() para casos de error
   static GoalModel empty() {
     return GoalModel(
       id: '',
       title: '',
       description: '',
-      currentProgress: 0.0,
       dueDate: DateTime.now().add(Duration(days: 1)),
       userId: '',
+      createdAt: DateTime.now(),
     );
   }
-
-  
-  DateTime? get targetDate => null;
 }
-

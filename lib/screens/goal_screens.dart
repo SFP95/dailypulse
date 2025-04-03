@@ -11,6 +11,10 @@ class GoalsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
+    if (currentUser == null) {
+      return _buildAuthErrorState(context);
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -21,13 +25,12 @@ class GoalsScreen extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('goals')
-            .where('userId', isEqualTo: currentUser?.uid)
+            .where('userId', isEqualTo: currentUser.uid)
             .orderBy('createdAt', descending: true)
-            .orderBy(FieldPath.documentId, descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return _buildErrorState(snapshot.error.toString());
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -50,10 +53,31 @@ class GoalsScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddGoalDialog(context),
+        onPressed: () => _showAddGoalDialog(context, currentUser.uid),
         child: Icon(Icons.add, color: Colors.white),
         backgroundColor: AppColors.primaryPurple,
         shape: CircleBorder(),
+      ),
+    );
+  }
+
+  Widget _buildAuthErrorState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 50, color: AppColors.error),
+          SizedBox(height: 20),
+          Text('Debes iniciar sesión', style: AppTextStyles.headlineSmall),
+          SizedBox(height: 10),
+          ElevatedButton(
+            onPressed: () => Navigator.pushNamed(context, '/login'),
+            child: Text('Iniciar sesión'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -63,17 +87,47 @@ class GoalsScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.flag, size: 60, color: AppColors.textSecondary),
+          Icon(Icons.gps_off, size: 90, color: AppColors.textSecondary),
           SizedBox(height: 20),
-          Text('No tienes metas creadas', style: AppTextStyles.bodyLarge),
+          Text('No tienes metas creadas', style: AppTextStyles.headlineSmall),
           SizedBox(height: 20),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryPurple,
               padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
-            onPressed: () => _showAddGoalDialog(context),
+            onPressed: () => _showAddGoalDialog(context, FirebaseAuth.instance.currentUser?.uid ?? ''),
             child: Text('Crear primera meta', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 50, color: AppColors.error),
+          SizedBox(height: 20),
+          Text('Ocurrió un error', style: AppTextStyles.headlineSmall),
+          SizedBox(height: 10),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              error,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyMedium,
+            ),
+          ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {},
+            child: Text('Reintentar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPurple,
+            ),
           ),
         ],
       ),
@@ -156,33 +210,44 @@ class GoalsScreen extends StatelessWidget {
     return DateFormat('dd/MM/yyyy').format(date);
   }
 
-  Future<void> _showAddGoalDialog(BuildContext context) async {
+  Future<void> _showAddGoalDialog(BuildContext context, String userId) async {
     final titleController = TextEditingController();
     final descController = TextEditingController();
+    DateTime selectedDate = DateTime.now().add(Duration(days: 30));
 
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.accentBlue,
         title: Text('Nueva Meta'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
-              decoration: InputDecoration(
-                labelText: 'Título*',
-                border: OutlineInputBorder(),
-              ),
+              decoration: InputDecoration(labelText: 'Título*'),
             ),
             SizedBox(height: 16),
             TextField(
               controller: descController,
-              decoration: InputDecoration(
-                labelText: 'Descripción',
-                border: OutlineInputBorder(),
-              ),
+              decoration: InputDecoration(labelText: 'Descripción'),
               maxLines: 3,
+            ),
+            SizedBox(height: 16),
+            ListTile(
+              title: Text('Fecha límite'),
+              subtitle: Text(DateFormat('dd/MM/yyyy').format(selectedDate)),
+              trailing: Icon(Icons.calendar_today),
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: selectedDate,
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(Duration(days: 365)),
+                );
+                if (picked != null) {
+                  selectedDate = picked;
+                }
+              },
             ),
           ],
         ),
@@ -202,26 +267,35 @@ class GoalsScreen extends StatelessWidget {
               }
 
               try {
+                // Verificación EXTRA de seguridad
                 final user = FirebaseAuth.instance.currentUser;
-                if (user == null) return;
+                if (user == null || user.uid != userId) {
+                  throw Exception('Usuario no autenticado o UID no coincide');
+                }
 
-                await FirebaseFirestore.instance.collection('goals').add({
+                // Crear documento con TODOS los campos requeridos
+                final newGoal = {
                   'title': titleController.text.trim(),
                   'description': descController.text.trim(),
                   'currentProgress': 0.0,
-                  'dueDate': DateTime.now().add(Duration(days: 30)),
-                  'userId': user.uid,
+                  'dueDate': Timestamp.fromDate(selectedDate),
+                  'userId': user.uid, // Usar UID del usuario autenticado
                   'createdAt': FieldValue.serverTimestamp(),
                   'isCompleted': false,
-                });
+                };
+
+                print('Intentando crear meta con datos: $newGoal');
+
+                await FirebaseFirestore.instance.collection('goals').add(newGoal);
 
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Meta creada con éxito')),
                 );
               } catch (e) {
+                print('Error completo al crear meta: $e');
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
+                  SnackBar(content: Text('Error al crear meta: ${e.toString()}')),
                 );
               }
             },
@@ -230,7 +304,10 @@ class GoalsScreen extends StatelessWidget {
         ],
       ),
     );
+    print('Usuario UID: ${FirebaseAuth.instance.currentUser?.uid}');
   }
+
+
 
   Future<void> _deleteGoal(String goalId) async {
     try {
