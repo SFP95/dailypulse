@@ -35,6 +35,6 @@ y recordatorios, te permite identificar patrones y mejorar tu calidad de vida.
 
   - Haz un fork del proyecto.
   - Crea una rama con tu feature (git checkout -b feature/nueva-funcion).
-  - Haz commit de tus cambios (git commit -m 'Añadí X función').
+  - Haz commit de tus cambios (git commit -m 'Añade X función').
   - Haz push a la rama (git push origin feature/nueva-funcion).
   - Abre un Pull Request.
