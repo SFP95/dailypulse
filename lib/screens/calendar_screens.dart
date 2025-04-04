@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:ui';
 import 'package:intl/intl.dart';
 import '../models/task_model.dart';
 import '../models/goal_model.dart';
@@ -31,38 +30,45 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _loadEvents() async {
-    final user = FirebaseAuth.instance.currentUser!;
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-    // Cargar tareas
-    final tasksSnapshot = await FirebaseFirestore.instance
-        .collection('tasks')
-        .where('userId', isEqualTo: user.uid)
-        .get();
+    try {
+      // Cargar tareas
+      final tasksSnapshot = await FirebaseFirestore.instance
+          .collection('tasks')
+          .where('userId', isEqualTo: user.uid)
+          .get();
 
-    _tasksByDate = {};
-    for (final doc in tasksSnapshot.docs) {
-      final task = TaskModel.fromMap({...doc.data(), 'id': doc.id});
-      final taskDate = task.dueDate;
-      final normalizedDate = DateTime(taskDate.year, taskDate.month, taskDate.day);
+      _tasksByDate = {};
+      for (final doc in tasksSnapshot.docs) {
+        try {
+          final task = TaskModel.fromFirestore(doc);
+          final normalizedDate = DateTime(task.dueDate.year, task.dueDate.month, task.dueDate.day);
+          _tasksByDate[normalizedDate] = [...?_tasksByDate[normalizedDate], task];
+        } catch (e) {
+          debugPrint('Error parsing task ${doc.id}: $e');
+        }
+      }
 
-      _tasksByDate[normalizedDate] ??= [];
-      _tasksByDate[normalizedDate]!.add(task);
-    }
+      // Cargar metas
+      final goalsSnapshot = await FirebaseFirestore.instance
+          .collection('goals')
+          .where('userId', isEqualTo: user.uid)
+          .get();
 
-    // Cargar metas
-    final goalsSnapshot = await FirebaseFirestore.instance
-        .collection('goals')
-        .where('userId', isEqualTo: user.uid)
-        .get();
-
-    _goalsByDate = {};
-    for (final doc in goalsSnapshot.docs) {
-      final goal = GoalModel.fromMap({...doc.data(), 'id': doc.id});
-      final goalDate = goal.dueDate;
-      final normalizedDate = DateTime(goalDate.year, goalDate.month, goalDate.day);
-
-      _goalsByDate[normalizedDate] ??= [];
-      _goalsByDate[normalizedDate]!.add(goal);
+      _goalsByDate = {};
+      for (final doc in goalsSnapshot.docs) {
+        try {
+          final goal = GoalModel.fromFirestore(doc);
+          final normalizedDate = DateTime(goal.dueDate.year, goal.dueDate.month, goal.dueDate.day);
+          _goalsByDate[normalizedDate] = [...?_goalsByDate[normalizedDate], goal];
+        } catch (e) {
+          debugPrint('Error parsing goal ${doc.id}: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading events: $e');
     }
   }
 
@@ -76,9 +82,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.today,
-                color: AppColors.primaryPurple,
-                size: 30,),
+            icon: Icon(Icons.today, color: AppColors.primaryPurple, size: 30),
             onPressed: () => setState(() {
               _focusedDay = DateTime.now();
               _selectedDay = DateTime.now();
@@ -92,6 +96,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator(color: AppColors.primaryPurple));
           }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error al cargar eventos'));
+          }
+
           return Column(
             children: [
               // Selector de vista
@@ -146,9 +155,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
               // Calendario
               _buildCalendar(),
-              //SizedBox(height: 1),
-
-              // Lista de eventos
               Expanded(child: _buildEventList()),
             ],
           );
@@ -166,7 +172,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _buildCalendar() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20,vertical: 30),
+      margin: EdgeInsets.symmetric(horizontal: 20, vertical: 30),
       decoration: BoxDecoration(
         color: AppColors.accentBlue.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
@@ -192,9 +198,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         },
         onPageChanged: (focusedDay) => _focusedDay = focusedDay,
         calendarFormat: _calendarFormat,
-        onFormatChanged: (format) {
-          setState(() => _calendarFormat = format);
-        },
+        onFormatChanged: (format) => setState(() => _calendarFormat = format),
         eventLoader: (day) {
           final normalizedDay = DateTime(day.year, day.month, day.day);
           return [
@@ -203,9 +207,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ];
         },
         calendarStyle: CalendarStyle(
-          defaultDecoration: BoxDecoration(
-            shape: BoxShape.circle,
-          ),
+          defaultDecoration: BoxDecoration(shape: BoxShape.circle),
           weekendDecoration: BoxDecoration(
             shape: BoxShape.circle,
             color: AppColors.accentPink.withOpacity(0.7),
@@ -268,7 +270,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
 
     return ListView(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0.01),
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       children: [
         if (dayGoals.isNotEmpty) ...[
           _buildSectionTitle('Metas que vencen', Icons.flag),
@@ -305,9 +307,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget _buildTaskItem(TaskModel task) {
     return Card(
       margin: EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -328,32 +328,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
         title: Text(
           task.title,
           style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.textPrimary,
             decoration: task.isCompleted ? TextDecoration.lineThrough : null,
           ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if ((task.toMap()['description'] as String?)?.isNotEmpty ?? false)
+            if (task.description.isNotEmpty)
               Text(
-                task.toMap()['description'] as String,
+                task.description,
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             if (task.goalId != null && task.goalId!.isNotEmpty)
               FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('goals')
-                    .doc(task.goalId)
-                    .get(),
+                future: FirebaseFirestore.instance.collection('goals').doc(task.goalId).get(),
                 builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    final goal = GoalModel.fromMap({
-                      ...?snapshot.data?.data() as Map<String, dynamic>?,
-                      'id': task.goalId
-                    });
+                  if (snapshot.hasData && snapshot.data!.exists) {
+                    final goal = GoalModel.fromFirestore(snapshot.data!);
                     return Text(
                       'Meta: ${goal.title}',
                       style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryPurple),
@@ -386,9 +379,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     return Card(
       margin: EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: ListTile(
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -411,10 +402,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
         title: Text(
           goal.title,
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,87 +443,111 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _toggleTaskCompletion(TaskModel task) async {
-    await FirebaseFirestore.instance
-        .collection('tasks')
-        .doc(task.id)
-        .update({'isCompleted': !task.isCompleted});
-    await _loadEvents();
+    try {
+      await FirebaseFirestore.instance
+          .collection('tasks')
+          .doc(task.id)
+          .update({'isCompleted': !task.isCompleted});
+      await _loadEvents();
+    } catch (e) {
+      debugPrint('Error toggling task completion: $e');
+    }
   }
 
   Future<void> _deleteTask(TaskModel task) async {
-    await FirebaseFirestore.instance.collection('tasks').doc(task.id).delete();
-    await _loadEvents();
+    try {
+      await FirebaseFirestore.instance.collection('tasks').doc(task.id).delete();
+      await _loadEvents();
+    } catch (e) {
+      debugPrint('Error deleting task: $e');
+    }
   }
 
   Future<void> _showAddEventDialog() async {
-    final TextEditingController titleController = TextEditingController();
-    final TextEditingController descriptionController = TextEditingController();
-    String? selectedPriority = 'media';
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    String selectedPriority = 'medium';
     String? selectedGoalId;
 
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDay ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(Duration(days: 365)),
     );
 
-    if (pickedDate != null) {
+    if (pickedDate == null) return;
+
+    try {
       final goalsSnapshot = await FirebaseFirestore.instance
           .collection('goals')
-          .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+          .where('userId', isEqualTo: user.uid)
           .get();
 
-      final goals = goalsSnapshot.docs.map((doc) {
-        return GoalModel.fromMap({...doc.data(), 'id': doc.id});
-      }).toList();
+      final goals = goalsSnapshot.docs.map((doc) => GoalModel.fromFirestore(doc)).toList();
 
       await showDialog(
         context: context,
         builder: (context) => StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Nuevo Evento'),
+              title: Text('Nueva Tarea'),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextField(
                       controller: titleController,
-                      decoration: InputDecoration(labelText: 'Título'),
+                      decoration: InputDecoration(
+                        labelText: 'Título*',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                     SizedBox(height: 16),
                     TextField(
                       controller: descriptionController,
-                      decoration: InputDecoration(labelText: 'Descripción'),
-                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: 'Descripción',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
                     ),
                     SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: selectedPriority,
-                      items: ['alta', 'media', 'baja']
-                          .map((priority) => DropdownMenuItem(
-                        value: priority,
-                        child: Text(
-                          priority[0].toUpperCase() + priority.substring(1),
-                        ),
-                      ))
-                          .toList(),
-                      onChanged: (value) => setState(() => selectedPriority = value),
-                      decoration: InputDecoration(labelText: 'Prioridad'),
+                      items: Priority.values.map((priority) {
+                        return DropdownMenuItem(
+                          value: priority.toString().split('.').last,
+                          child: Text(
+                            priority.toString().split('.').last[0].toUpperCase() +
+                                priority.toString().split('.').last.substring(1),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => selectedPriority = value!),
+                      decoration: InputDecoration(
+                        labelText: 'Prioridad',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                     SizedBox(height: 16),
                     if (goals.isNotEmpty)
                       DropdownButtonFormField<String>(
                         value: selectedGoalId,
                         hint: Text('Asociar a meta (opcional)'),
-                        items: goals
-                            .map((goal) => DropdownMenuItem(
-                          value: goal.id,
-                          child: Text(goal.title),
-                        ))
-                            .toList(),
+                        items: goals.map((goal) {
+                          return DropdownMenuItem(
+                            value: goal.id,
+                            child: Text(goal.title),
+                          );
+                        }).toList(),
                         onChanged: (value) => setState(() => selectedGoalId = value),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                   ],
                 ),
@@ -546,29 +558,46 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   child: Text('Cancelar'),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryPurple,
+                  ),
                   onPressed: () async {
-                    if (titleController.text.isNotEmpty) {
+                    if (titleController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('El título es obligatorio')),
+                      );
+                      return;
+                    }
+
+                    try {
                       await FirebaseFirestore.instance.collection('tasks').add({
-                        'title': titleController.text,
-                        'description': descriptionController.text,
+                        'title': titleController.text.trim(),
+                        'description': descriptionController.text.trim(),
                         'dueDate': Timestamp.fromDate(pickedDate),
                         'isCompleted': false,
                         'priority': selectedPriority,
                         'goalId': selectedGoalId,
-                        'userId': FirebaseAuth.instance.currentUser!.uid,
+                        'userId': user.uid,
                         'createdAt': FieldValue.serverTimestamp(),
                       });
+
                       await _loadEvents();
                       Navigator.pop(context);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error al crear tarea: $e')),
+                      );
                     }
                   },
-                  child: Text('Guardar'),
+                  child: Text('Guardar', style: TextStyle(color: Colors.white)),
                 ),
               ],
             );
           },
         ),
       );
+    } catch (e) {
+      debugPrint('Error showing add event dialog: $e');
     }
   }
 }

@@ -37,9 +37,7 @@ class GoalsScreen extends StatelessWidget {
             return Center(child: CircularProgressIndicator(color: AppColors.primaryPurple));
           }
 
-          final goals = snapshot.data!.docs.map((doc) {
-            return GoalModel.fromMap({...doc.data() as Map<String, dynamic>, 'id': doc.id});
-          }).toList();
+          final goals = snapshot.data!.docs.map((doc) => GoalModel.fromFirestore(doc)).toList();
 
           if (goals.isEmpty) {
             return _buildEmptyState(context);
@@ -306,8 +304,6 @@ class GoalsScreen extends StatelessWidget {
     );
     print('Usuario UID: ${FirebaseAuth.instance.currentUser?.uid}');
   }
-
-
 
   Future<void> _deleteGoal(String goalId) async {
     try {

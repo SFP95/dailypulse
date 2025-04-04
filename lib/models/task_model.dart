@@ -1,68 +1,62 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
-enum Priority {
-  low,
-  medium,
-  high,
-}
+enum Priority { low, medium, high }
 
 class TaskModel {
   final String id;
-  final String goalId;
   final String userId;
+  final String? goalId;
   final String title;
-  final bool isCompleted;
-  final TimeOfDay dueTime;
-  final DateTime dueDate;
-  final List<String> repeatDays;
-  final DateTime createdAt;
-  final Priority priority;
   final String description;
+  final DateTime dueDate;
+  final TimeOfDay dueTime;
+  final bool isCompleted;
+  final Priority priority;
+  final DateTime createdAt;
+  final List<String> repeatDays;
 
   TaskModel({
     required this.id,
-    required this.goalId,
     required this.userId,
+    this.goalId,
     required this.title,
-    this.isCompleted = false,
-    required this.dueTime,
-    required this.dueDate,
-    this.repeatDays = const [],
-    required this.createdAt,
-    this.priority = Priority.medium,
     this.description = '',
+    required this.dueDate,
+    required this.dueTime,
+    this.isCompleted = false,
+    this.priority = Priority.medium,
+    required this.createdAt,
+    this.repeatDays = const [],
   });
+
+  factory TaskModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return TaskModel.fromMap({
+      ...data,
+      'id': doc.id,
+    });
+  }
 
   factory TaskModel.fromMap(Map<String, dynamic> map) {
     try {
-      // Manejo mejorado de dueTime
-      final timeStr = map['dueTime']?.toString() ?? '00:00';
-      final timeParts = timeStr.split(':');
-      final hour = int.tryParse(timeParts[0]) ?? 0;
-      final minute = int.tryParse(timeParts.length > 1 ? timeParts[1] : '0') ?? 0;
-
-      // Manejo robusto de dueDate (Timestamp o String)
-      DateTime parseDueDate(dynamic date) {
-        if (date == null) return DateTime.now();
-        if (date is Timestamp) return date.toDate();
-        if (date is String) return DateTime.parse(date);
-        if (date is DateTime) return date;
-        throw FormatException('Formato de fecha no válido');
-      }
+      // Parse time from "HH:mm" format
+      final timeParts = (map['dueTime']?.toString() ?? '00:00').split(':');
+      final hour = int.parse(timeParts[0]);
+      final minute = int.parse(timeParts[1]);
 
       return TaskModel(
-        id: map['id']?.toString() ?? '',
-        goalId: map['goalId']?.toString() ?? '',
-        userId: map['userId']?.toString() ?? '',
-        title: map['title']?.toString() ?? 'Sin título',
-        isCompleted: map['isCompleted'] ?? false,
+        id: map['id'] ?? '',
+        userId: map['userId'] ?? '',
+        goalId: map['goalId'],
+        title: map['title'] ?? 'Sin título',
+        description: map['description'] ?? '',
+        dueDate: (map['dueDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
         dueTime: TimeOfDay(hour: hour, minute: minute),
-        dueDate: parseDueDate(map['dueDate']),
-        repeatDays: List<String>.from(map['repeatDays'] ?? []),
-        createdAt: parseDueDate(map['createdAt']),
+        isCompleted: map['isCompleted'] ?? false,
         priority: _parsePriority(map['priority']),
-        description: map['description']?.toString() ?? '',
+        createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        repeatDays: List<String>.from(map['repeatDays'] ?? []),
       );
     } catch (e) {
       throw FormatException('Error parsing TaskModel: $e');
@@ -82,21 +76,20 @@ class TaskModel {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'goalId': goalId,
       'userId': userId,
+      'goalId': goalId,
       'title': title,
-      'isCompleted': isCompleted,
-      'dueTime': '${dueTime.hour.toString().padLeft(2, '0')}:${dueTime.minute.toString().padLeft(2, '0')}',
-      'dueDate': Timestamp.fromDate(dueDate), // Guardar como Timestamp
-      'repeatDays': repeatDays,
-      'createdAt': Timestamp.fromDate(createdAt), // Guardar como Timestamp
-      'priority': priority.toString().split('.').last,
       'description': description,
+      'dueDate': Timestamp.fromDate(dueDate),
+      'dueTime': '${dueTime.hour.toString().padLeft(2, '0')}:${dueTime.minute.toString().padLeft(2, '0')}',
+      'isCompleted': isCompleted,
+      'priority': priority.toString().split('.').last,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'repeatDays': repeatDays,
     };
   }
 
-  DateTime get combinedDueDateTime {
+  DateTime get combinedDateTime {
     return DateTime(
       dueDate.year,
       dueDate.month,
