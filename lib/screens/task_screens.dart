@@ -25,7 +25,7 @@ class _TasksScreenState extends State<TasksScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        //title: Text('Mis Tareas', style: AppTextStyles.headlineMedium),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
       ),

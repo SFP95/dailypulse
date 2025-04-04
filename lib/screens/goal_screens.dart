@@ -18,7 +18,7 @@ class GoalsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Mis Metas', style: AppTextStyles.headlineMedium),
+        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
       ),
